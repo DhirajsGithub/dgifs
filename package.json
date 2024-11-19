@@ -7,11 +7,18 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "setLocal": "ENVFILE=.env.local",
+    "setProduction": "ENVFILE=.env.production",
+    "ios-local": "yarn setLocal react-native run-ios --mode=Debug --scheme \"dgifsLocal\" --simulator='iPhone 15 Pro'",
+    "ios-production": "yarn setProduction react-native run-ios --mode=Debug --scheme \"dgifsProduction\" --simulator='iPhone 15 Pro'",
+    "android-local": "yarn setLocal  react-native run-android",
+    "android-production": "yarn setProduction  react-native run-android"
   },
   "dependencies": {
     "react": "18.3.1",
-    "react-native": "0.76.2"
+    "react-native": "0.76.2",
+    "react-native-config": "^1.5.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
