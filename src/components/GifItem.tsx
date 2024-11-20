@@ -5,7 +5,7 @@ import {TouchableOpacity, Image, StyleSheet} from 'react-native';
 const GifItem = ({item, ITEM_SIZE}: {item: any; ITEM_SIZE: number}) => {
   const navigation = useNavigation();
   const handleGigPress = id => {
-    navigation.navigate('GIFDetails');
+    navigation.navigate('GIFDetails', {id: item.id, item});
   };
   return (
     <TouchableOpacity onPress={handleGigPress} style={styles.gifItem}>

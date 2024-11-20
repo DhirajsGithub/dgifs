@@ -19,7 +19,6 @@ const fetchTrendingGifs = async ({
           api_key: Config.GIPHY_API_KEY,
           limit,
           offset,
-          rating: 'g',
         },
       }
     );

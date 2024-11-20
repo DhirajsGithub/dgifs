@@ -26,10 +26,12 @@ const Router = () => {
           },
         }}>
         <Stack.Screen
+        
           name="Trending"
           component={TrendingScreen}
           options={{
             title: 'Trending GIFs',
+            headerBackTitle: '',
             headerRight: () => <ThemeToggleSwitch />, 
           }}
         />
@@ -38,6 +40,7 @@ const Router = () => {
           component={GIFDetails}
           options={{
             title: 'GIF Details',
+            headerBackTitle: '',
             headerRight: () => <ThemeToggleSwitch />, 
           }}
         />

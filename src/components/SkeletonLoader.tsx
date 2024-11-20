@@ -15,14 +15,13 @@ const SkeletonLoader = () => {
       backgroundColor={theme.backgroundColor === '#ffffff' ? '#e0e0e0' : '#333333'}
       foregroundColor={theme.backgroundColor === '#ffffff' ? '#f4f4f4' : '#555555'}
     >
-      <Rect x="10" y="10" rx="4" ry="4" width="100%" height="150" />
-      <Rect x="10" y="170" rx="4" ry="4" width="100%" height="20" />
+      <Rect x="10" y="10" rx="4" ry="4" width="100%" height="200" />
     </ContentLoader>
   );
 
   return (
     <FlatList
-      data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}  // Dummy data to render multiple loaders
+      data={[1, 2, 3, 4, 5, 6, 7]}  // Dummy data to render multiple loaders
       renderItem={renderItem}
       keyExtractor={(item) => item.toString()}
       numColumns={2}  // Two columns in portrait mode (default)
