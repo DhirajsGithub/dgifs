@@ -1,22 +1,18 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Image,
-  StyleSheet,
-  Dimensions,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
-import {useFetchTrendingGifs} from '../hooks/useFetchTrendingGifs';
+import React, { useEffect } from 'react';
+import { FlatList, View, Text, StyleSheet, Dimensions } from 'react-native';
+import { useFetchTrendingGifs } from '../hooks/useFetchTrendingGifs';
+import { useTheme } from '../context/ThemeContext';
+import SkeletonLoader from '../components/SkeletonLoader';
+import GifItem from '../components/TrendigGifsComponents/GifItem';
+import Orientation from 'react-native-orientation-locker';
 
-const {width} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const ITEM_SPACING = 4;
 const NUM_COLUMNS = 3;
 const ITEM_SIZE = (width - (NUM_COLUMNS + 1) * ITEM_SPACING) / NUM_COLUMNS;
 
 const TrendingScreen: React.FC = () => {
+  const { theme } = useTheme();
   const {
     data,
     fetchNextPage,
@@ -27,64 +23,45 @@ const TrendingScreen: React.FC = () => {
     error,
   } = useFetchTrendingGifs();
 
-  const renderGifItem = ({item}: {item: any}) => (
-    <TouchableOpacity style={styles.gifItem}>
-      <Image
-        source={{uri: item.images.fixed_width.url}}
-        style={{
-          width: ITEM_SIZE,
-          height:
-            parseInt(item.images.fixed_width.height) *
-            (ITEM_SIZE / parseInt(item.images.fixed_width.width)),
-        }}
-        resizeMode="cover"
-      />
-    </TouchableOpacity>
-  );
+  useEffect(() => {
+    Orientation.lockToPortrait();
 
-  const renderFooter = () => {
-    if (!hasNextPage) return null;
-    return (
-      <View style={styles.footer}>
-        {isFetchingNextPage && <ActivityIndicator size="large" />}
-      </View>
-    );
-  };
+  });
 
-  const loadMoreGifs = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  };
+  const renderGifItem = ({ item }: { item: any }) => <GifItem item={item} ITEM_SIZE={ITEM_SIZE} />;
+
+  const renderFooter = () => <SkeletonLoader />;
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.centered, { backgroundColor: theme.backgroundColor }]}>
+        <SkeletonLoader />
       </View>
     );
   }
 
   if (isError) {
     return (
-      <View style={styles.centered}>
-        <Text>
+      <View style={[styles.centered, { backgroundColor: theme.backgroundColor }]}>
+        <Text style={{ color: theme.textColor }}>
           Error: {error instanceof Error ? error.message : 'Unknown error'}
         </Text>
       </View>
     );
   }
 
-  const flattenedData = data?.pages.flatMap(page => page.data) || [];
+  const flattenedData = data?.pages.flatMap((page) => page.data) || [];
 
   return (
     <FlatList
       data={flattenedData}
       renderItem={renderGifItem}
-      keyExtractor={item => item.id}
+      keyExtractor={(item) => item.id}
       numColumns={NUM_COLUMNS}
-      contentContainerStyle={styles.container}
-      onEndReached={loadMoreGifs}
+      contentContainerStyle={[styles.container, { backgroundColor: theme.backgroundColor }]}
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+      }}
       onEndReachedThreshold={0.5}
       ListFooterComponent={renderFooter}
     />
@@ -95,18 +72,10 @@ const styles = StyleSheet.create({
   container: {
     padding: ITEM_SPACING,
   },
-  gifItem: {
-    margin: ITEM_SPACING / 2,
-  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  footer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 10,
   },
 });
 
