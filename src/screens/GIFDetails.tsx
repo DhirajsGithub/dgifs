@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  ScrollView,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import {useRoute} from '@react-navigation/native';
@@ -23,6 +24,9 @@ import GifDetailsLoadingSkeleton from '../components/GifDetailsLoadingSkeleton';
 import {requestStoragePermission} from '../utils/storagePermissions';
 import ErrorMessage from '../components/ErrorMessage';
 import DownloadModal from '../components/DownloadModal';
+import RNFS from 'react-native-fs';
+import LoadingOverlay from '../components/LoadingOverlary';
+
 const {width} = Dimensions.get('window');
 
 const GIFDetails = () => {
@@ -33,6 +37,7 @@ const GIFDetails = () => {
   const [isOriginalLoaded, setIsOriginalLoaded] = useState(false);
   const [isDownloadModalVisible, setIsDownloadModalVisible] = useState(false);
   const [currentDownloadOption, setCurrentDownloadOption] = useState(null);
+  const [shareLoading, setShareLoading] = useState(false);
 
   const {theme, isDark} = useTheme();
   const {data: gifData, isLoading, error} = useGifDetails(id);
@@ -71,14 +76,14 @@ const GIFDetails = () => {
   };
 
   const downloadGifOptions = gifData
-  ? Object.entries(gifData.images)
-      .map(([key, value]) => ({
-        label: key.replace(/_/g, ' '),
-        url: value.url,
-        type: key.includes('mp4') ? 'mp4' : 'gif',
-      }))
-      .filter(option => option.url)
-  : [];
+    ? Object.entries(gifData.images)
+        .map(([key, value]) => ({
+          label: key.replace(/_/g, ' '),
+          url: value.url,
+          type: key.includes('mp4') ? 'mp4' : 'gif',
+        }))
+        .filter(option => option.url)
+    : [];
 
   const handleDownload = async option => {
     setIsDownloadModalVisible(false);
@@ -121,17 +126,38 @@ const GIFDetails = () => {
   };
 
   const handleShare = async () => {
-    if (!gifData) return;
-
-    const shareOptions = {
-      title: 'Share GIF',
-      url: gifData.images.original.url,
-    };
+    if (!gifData || !gifData.images.original.url) return;
 
     try {
+      setShareLoading(true);
+
+      // Step 1: Download the GIF to local storage
+      const fileUrl = gifData.images.original.url;
+      const filePath = `${RNFS.CachesDirectoryPath}/temp_gif.gif`;
+
+      // Download the GIF to local path
+      const download = await RNFS.downloadFile({
+        fromUrl: fileUrl,
+        toFile: filePath,
+      }).promise;
+
+      // Prepare the share options
+      const shareOptions = {
+        title: 'Share GIF',
+        url:
+          Platform.OS === 'ios' ? `file://${filePath}` : `file://${filePath}`,
+        type: 'image/gif',
+      };
+
+      // Share the downloaded GIF
       await Share.open(shareOptions);
-    } catch (sharingError) {
-      console.error('Sharing Error:', sharingError);
+
+      // Clean up the downloaded file after sharing
+      await RNFS.unlink(filePath); // Delete the file to free up storage
+    } catch (error) {
+      console.error('Sharing Error:', error);
+    } finally {
+      setShareLoading(false);
     }
   };
 
@@ -157,66 +183,69 @@ const GIFDetails = () => {
       : gifData.images.preview_webp.url;
   };
 
-  console.log(isOriginalLoaded)
-
   return (
     <View style={[styles.container, {backgroundColor: theme.backgroundColor}]}>
-      <View style={styles.contentContainer}>
-        <View style={styles.gifContainer}>
-          <Image
-            source={{uri: gifData.images.preview_webp.url}}
-            style={[styles.gif, isOriginalLoaded && styles.hidden]}
-            resizeMode='contain'
-          />
-          <FastImage
-            source={{uri: getGifUrl()}}
-            style={[styles.gif, !isOriginalLoaded && styles.hidden]}
-            resizeMode={FastImage.resizeMode.contain}
-            onLoad={() => setIsOriginalLoaded(true)}
-          />
-        </View>
-        {gifData.title && (
-          <Text
-            style={[
-              styles.titleText,
-              {
-                color: !isDark ? 'black' : 'white',
-              },
-            ]}>
-            {gifData.title}
-          </Text>
-        )}
-        <View style={styles.controlsContainer}>
-          <View style={styles.actionRow}>
-            <TouchableOpacity
-              onPress={togglePlayPause}
-              style={styles.controlButton}>
-              {!isPaused ? (
-                <Pause size={30} color="black" />
-              ) : (
-                <Play size={30} color="black" />
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setIsDownloadModalVisible(true)}
-              style={styles.controlButton}>
-              <Download size={30} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleShare}
-              style={styles.controlButton}>
-              <Share2 size={30} color="black" />
-            </TouchableOpacity>
+      <LoadingOverlay isLoading={shareLoading} />
+      <ScrollView
+        style={styles.contentContainer}
+        showsVerticalScrollIndicator={false}>
+        <View>
+          <View style={styles.gifContainer}>
+            <Image
+              source={{uri: gifData.images.preview_webp.url}}
+              style={[styles.gif, isOriginalLoaded && styles.hidden]}
+              resizeMode="contain"
+            />
+            <FastImage
+              source={{uri: getGifUrl()}}
+              style={[styles.gif, !isOriginalLoaded && styles.hidden]}
+              resizeMode={FastImage.resizeMode.contain}
+              onLoad={() => setIsOriginalLoaded(true)}
+            />
           </View>
+          {gifData.title && (
+            <Text
+              style={[
+                styles.titleText,
+                {
+                  color: !isDark ? 'black' : 'white',
+                },
+              ]}>
+              {gifData.title}
+            </Text>
+          )}
+          <View style={styles.controlsContainer}>
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                onPress={togglePlayPause}
+                style={styles.controlButton}>
+                {!isPaused ? (
+                  <Pause size={30} color="black" />
+                ) : (
+                  <Play size={30} color="black" />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setIsDownloadModalVisible(true)}
+                style={styles.controlButton}>
+                <Download size={30} color="black" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleShare}
+                style={styles.controlButton}>
+                <Share2 size={30} color="black" />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <DownloadModal
+            isVisible={isDownloadModalVisible}
+            onClose={() => setIsDownloadModalVisible(false)}
+            downloadGifOptions={downloadGifOptions}
+            handleDownload={handleDownload}
+          />
         </View>
-        <DownloadModal
-          isVisible={isDownloadModalVisible}
-          onClose={() => setIsDownloadModalVisible(false)}
-          downloadGifOptions={downloadGifOptions}
-          handleDownload={handleDownload}
-        />
-      </View>
-      <Toast />
+        <Toast />
+      </ScrollView>
     </View>
   );
 };

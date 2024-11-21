@@ -2,25 +2,26 @@ import React from 'react';
 import ContentLoader, {Circle, Rect} from 'react-content-loader/native';
 import {useTheme} from '../context/ThemeContext';
 import {Dimensions, StyleSheet, View} from 'react-native';
+import { darkTheme, lightTheme } from '../theme/themes';
 
 const {width} = Dimensions.get('window');
 
 const GifDetailsLoadingSkeleton = () => {
-  const {isDark} = useTheme();
+  const {isDark, theme} = useTheme();
   const circleRadius = 30;
   const circleSpacing = 20;
   const rectWidth = width - 100;
   const rectHeight = 10;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: theme.backgroundColor}]}>
       <ContentLoader
         speed={1}
         width={width * 0.9}
         height={width * 0.9 + 150}
         viewBox={`0 0 ${width * 0.9} ${width * 0.9 + 150}`}
-        backgroundColor={!isDark ? '#e0e0e0' : '#333333'}
-        foregroundColor={!isDark ? '#f4f4f4' : '#555555'}>
+        backgroundColor={isDark ? lightTheme.skeletonBg : darkTheme.skeletonBg}
+        foregroundColor={isDark ? lightTheme.skeletonFg : darkTheme.skeletonFg}>
         <Rect x="0" y="0" rx="20" ry="20" width="100%" height={width * 0.9} />
 
         <Rect
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    marginTop: 20,
+    paddingTop: 20,
   },
 });
 

@@ -2,6 +2,7 @@ import React from 'react';
 import {FlatList, StyleSheet} from 'react-native';
 import ContentLoader, {Rect} from 'react-content-loader/native';
 import {useTheme} from '../context/ThemeContext';
+import { darkTheme, lightTheme } from '../theme/themes';
 
 const SkeletonLoader = () => {
   const {theme, isDark} = useTheme();
@@ -12,8 +13,8 @@ const SkeletonLoader = () => {
       width="50%"
       height={100}
       viewBox="0 0 400 200"
-      backgroundColor={!isDark ? '#e0e0e0' : '#333333'}
-      foregroundColor={!isDark ? '#f4f4f4' : '#555555'}>
+      backgroundColor={isDark ? lightTheme.skeletonBg : darkTheme.skeletonBg}
+      foregroundColor={isDark ? lightTheme.skeletonFg : darkTheme.skeletonFg}>
       <Rect x="10" y="10" rx="4" ry="4" width="100%" height="200" />
     </ContentLoader>
   );

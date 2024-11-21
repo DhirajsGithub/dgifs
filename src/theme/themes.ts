@@ -5,6 +5,8 @@ export const lightTheme = {
   inputBackgroundColor: '#fff',
   placeholderTextColor: '#aaa',
   modalBg: '#f9f9f9',
+  skeletonBg: '#333333',
+  skeletonFg: '#555555',
 };
 
 export const darkTheme = {
@@ -14,4 +16,6 @@ export const darkTheme = {
   inputBackgroundColor: '#1e1e1e',
   placeholderTextColor: '#555',
   modalBg: '#333333',
+  skeletonBg: '#e0e0e0',
+  skeletonFg: '#f4f4f4',
 };
