@@ -70,20 +70,26 @@ Follow these simple steps to set up and run DGifs on your local device:
 git clone https://github.com/DhirajsGithub/dgifs
 cd dgifs
 ```
-### **3. Install Dependencies**
-```bash
-npm install
-cd ios && pod install && cd ..
-```
 
-### **4. Configure Environment Variables**
-- Create a `.env` file in the root directory.
+### **3. Configure Environment Variables**
+- Create a `.env`, `.env.local`, `.env.production` file in the root directory.
 ```bash
 GIPHY_API_KEY=your_giphy_api_key
 GIPHY_BASE_URL=https://api.giphy.com
 ```
 
-### **5.  Start the App**
+### **4. in android foler create a file `local.properties` in it add**
+```bash
+sdk.dir = /Users/username/Library/Android/sdk
+```
+
+### **5. Install Dependencies**
+```bash
+npm install
+cd ios && pod install && cd ..
+```
+
+### **6.  Start the App**
 - **Android**: `npx react-native run-android`
 - **iOS**: `npx react-native run-ios`
 
