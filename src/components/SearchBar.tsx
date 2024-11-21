@@ -7,7 +7,7 @@ import {
   Text,
 } from 'react-native';
 import {debounce} from '../utils/debounce';
-import {useTheme} from '../context/ThemeContext'; // Import the theme context
+import {useTheme} from '../context/ThemeContext';
 
 const SearchBar = ({onSearch}: {onSearch: (query: string) => void}) => {
   const [text, setText] = useState('');
@@ -80,7 +80,6 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     fontSize: 25,
-    // fontWeight: 'bold',
   },
 });
 

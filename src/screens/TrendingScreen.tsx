@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
-import { FlatList, View, StyleSheet, Dimensions, Text } from 'react-native';
-import { useFetchTrendingGifs } from '../hooks/useFetchTrendingGifs';
-import { useSearchGifs } from '../hooks/useSearchGifs';
-import { useTheme } from '../context/ThemeContext';
+import React, {useState} from 'react';
+import {
+  FlatList,
+  View,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+} from 'react-native';
+import {useFetchTrendingGifs} from '../hooks/useFetchTrendingGifs';
+import {useSearchGifs} from '../hooks/useSearchGifs';
+import {useTheme} from '../context/ThemeContext';
 import SkeletonLoader from '../components/SkeletonLoader';
 import GifItem from '../components/GifItem';
 import SearchBar from '../components/SearchBar';
+import ErrorMessage from '../components/ErrorMessage';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 const ITEM_SPACING = 4;
 const NUM_COLUMNS = 3;
 const ITEM_SIZE = (width - (NUM_COLUMNS + 1) * ITEM_SPACING) / NUM_COLUMNS;
 
 const TrendingScreen: React.FC = () => {
-  const { theme } = useTheme();
+  const {theme} = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
 
   const trendingGifs = useFetchTrendingGifs();
@@ -37,7 +44,7 @@ const TrendingScreen: React.FC = () => {
     isFetchingNextPage: isFetchingNextSearchPage,
   } = searchGifs;
 
-  const renderGifItem = ({ item }: { item: any }) => (
+  const renderGifItem = ({item}: {item: any}) => (
     <GifItem item={item} ITEM_SIZE={ITEM_SIZE} />
   );
 
@@ -59,7 +66,8 @@ const TrendingScreen: React.FC = () => {
   const renderContent = () => {
     if (isLoadingTrending || (isSearching && isLoadingSearch)) {
       return (
-        <View style={[styles.centered, { backgroundColor: theme.backgroundColor }]}>
+        <View
+          style={[styles.centered, {backgroundColor: theme.backgroundColor}]}>
           <SkeletonLoader />
         </View>
       );
@@ -67,9 +75,9 @@ const TrendingScreen: React.FC = () => {
 
     if (flattenedData.length === 0) {
       return (
-        <View style={[styles.centered, { backgroundColor: theme.backgroundColor }]}>
-          <Text style={{ color: theme.textColor }}>No GIFs found</Text>
-        </View>
+        <ErrorMessage
+          message={isSearching ? 'No GIFs found' : 'No trending GIFs found'}
+        />
       );
     }
 
@@ -81,7 +89,7 @@ const TrendingScreen: React.FC = () => {
         numColumns={NUM_COLUMNS}
         contentContainerStyle={[
           styles.container,
-          { backgroundColor: theme.backgroundColor },
+          {backgroundColor: theme.backgroundColor},
         ]}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
@@ -91,16 +99,19 @@ const TrendingScreen: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.backgroundColor }}>
-      <SearchBar onSearch={setSearchQuery} />
-      {renderContent()}
-    </View>
+    <>
+      <StatusBar backgroundColor={theme.headerColor} />
+      <View style={{flex: 1, backgroundColor: theme.backgroundColor}}>
+        <SearchBar onSearch={setSearchQuery} />
+        {renderContent()}
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: ITEM_SPACING,
+    // padding: ITEM_SPACING,
   },
   centered: {
     flex: 1,

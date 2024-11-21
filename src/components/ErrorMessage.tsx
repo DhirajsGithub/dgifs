@@ -1,30 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import {Text, StyleSheet, View} from 'react-native';
+import {useTheme} from '../context/ThemeContext';
 
 interface ErrorMessageProps {
   message: string;
 }
 
-const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
+const ErrorMessage: React.FC<ErrorMessageProps> = ({message}) => {
+  const {theme} = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.errorText}>Error: {message}</Text>
+    <View style={[styles.centered, {backgroundColor: theme.backgroundColor}]}>
+      <Text style={{color: theme.textColor}}>{message}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
 

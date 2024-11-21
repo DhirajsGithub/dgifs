@@ -2,59 +2,121 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Platform,
-  ToastAndroid,
   Alert,
+  Linking,
+  StyleSheet,
   Dimensions,
+  Image,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import {useRoute} from '@react-navigation/native';
-import RNFS from 'react-native-fs';
-import Share from 'react-native-share';
-import {useGifDetails} from '../hooks/useGifDetails';
+import RNFetchBlob from 'rn-fetch-blob';
 import FastImage from 'react-native-fast-image';
 import {Play, Pause, Download, Share2} from 'lucide-react-native';
-import GifDetailsLoadingSkeleton from '../components/GifDetailsLoadingSkeleton';
+import Share from 'react-native-share';
+import {CameraRoll} from '@react-native-camera-roll/camera-roll';
+import {useGifDetails} from '../hooks/useGifDetails';
 import {useTheme} from '../context/ThemeContext';
-
+import GifDetailsLoadingSkeleton from '../components/GifDetailsLoadingSkeleton';
+import {requestStoragePermission} from '../utils/storagePermissions';
+import ErrorMessage from '../components/ErrorMessage';
+import DownloadModal from '../components/DownloadModal';
 const {width} = Dimensions.get('window');
 
 const GIFDetails = () => {
   const route = useRoute<{params: {id: string}}>();
   const {id} = route.params;
+
   const [isPaused, setIsPaused] = useState(false);
   const [isOriginalLoaded, setIsOriginalLoaded] = useState(false);
-  const {theme} = useTheme();
+  const [isDownloadModalVisible, setIsDownloadModalVisible] = useState(false);
+  const [currentDownloadOption, setCurrentDownloadOption] = useState(null);
 
+  const {theme, isDark} = useTheme();
   const {data: gifData, isLoading, error} = useGifDetails(id);
 
-  // Preload original GIF
   useEffect(() => {
     if (gifData) {
       FastImage.preload([{uri: gifData.images.original.url}]);
     }
   }, [gifData]);
 
-  const handleDownload = async () => {
-    if (!gifData) return;
+  const showPermissionDeniedAlert = () => {
+    Alert.alert(
+      'Permission Denied',
+      'Storage permission is required to download GIFs.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Open Settings',
+          onPress: () => {
+            Linking.openSettings();
+          },
+        },
+        {
+          text: 'Try Again',
+          onPress: () => {
+            if (currentDownloadOption) {
+              handleDownload(currentDownloadOption);
+            }
+          },
+        },
+      ],
+    );
+  };
 
-    const url = gifData.images.original.url;
-    const filename = `gif_${Date.now()}.gif`;
-    const path = `${RNFS.DocumentDirectoryPath}/${filename}`;
+  const downloadGifOptions = gifData
+  ? Object.entries(gifData.images)
+      .map(([key, value]) => ({
+        label: key.replace(/_/g, ' '),
+        url: value.url,
+        type: key.includes('mp4') ? 'mp4' : 'gif',
+      }))
+      .filter(option => option.url)
+  : [];
+
+  const handleDownload = async option => {
+    setIsDownloadModalVisible(false);
+    setCurrentDownloadOption(option);
+
+    const hasPermission = await requestStoragePermission();
+
+    if (!hasPermission) {
+      showPermissionDeniedAlert();
+      return;
+    }
 
     try {
-      const result = await RNFS.downloadFile({fromUrl: url, toFile: path})
-        .promise;
+      const response = await RNFetchBlob.config({
+        fileCache: true,
+        appendExt: option.type,
+      }).fetch('GET', option.url);
 
-      if (result.statusCode === 200) {
-        Platform.OS === 'android'
-          ? ToastAndroid.show('GIF Downloaded', ToastAndroid.SHORT)
-          : Alert.alert('Downloaded', 'GIF saved successfully');
-      }
-    } catch (downloadError) {
-      console.error('Download Error:', downloadError);
-      Alert.alert('Download Failed', 'Unable to download GIF');
+      const savedUri = await CameraRoll.saveAsset(response.path(), {
+        type: 'photo',
+        album: 'D-GIFs Downloads',
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Download Successful',
+        text2: `GIF saved to ${Platform.OS === 'ios' ? 'Photos' : 'Gallery'}`,
+        visibilityTime: 3000,
+      });
+
+      await response.flush();
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Download Failed',
+        text2: 'Unable to download GIF. Please try again.',
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -78,8 +140,13 @@ const GIFDetails = () => {
   };
 
   if (isLoading) return <GifDetailsLoadingSkeleton />;
-  if (error) return null;
-  if (!gifData) return null;
+  if (error || !gifData) {
+    if (error) {
+      return <ErrorMessage message={error.message} />;
+    } else {
+      return <ErrorMessage message="No GIF found" />;
+    }
+  }
 
   const getGifUrl = () => {
     if (isPaused) {
@@ -87,21 +154,20 @@ const GIFDetails = () => {
     }
     return isOriginalLoaded
       ? gifData.images.original.url
-      : gifData.images.preview_gif.url;
+      : gifData.images.preview_webp.url;
   };
+
+  console.log(isOriginalLoaded)
 
   return (
     <View style={[styles.container, {backgroundColor: theme.backgroundColor}]}>
       <View style={styles.contentContainer}>
         <View style={styles.gifContainer}>
-          {/* Preview GIF */}
-          <FastImage
-            source={{uri: gifData.images.preview_gif.url}}
+          <Image
+            source={{uri: gifData.images.preview_webp.url}}
             style={[styles.gif, isOriginalLoaded && styles.hidden]}
-            resizeMode={FastImage.resizeMode.contain}
+            resizeMode='contain'
           />
-
-          {/* Original GIF */}
           <FastImage
             source={{uri: getGifUrl()}}
             style={[styles.gif, !isOriginalLoaded && styles.hidden]}
@@ -109,19 +175,17 @@ const GIFDetails = () => {
             onLoad={() => setIsOriginalLoaded(true)}
           />
         </View>
-
         {gifData.title && (
           <Text
             style={[
               styles.titleText,
               {
-                color: theme.backgroundColor === '#ffffff' ? 'black' : 'white',
+                color: !isDark ? 'black' : 'white',
               },
             ]}>
             {gifData.title}
           </Text>
         )}
-
         <View style={styles.controlsContainer}>
           <View style={styles.actionRow}>
             <TouchableOpacity
@@ -134,7 +198,7 @@ const GIFDetails = () => {
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={handleDownload}
+              onPress={() => setIsDownloadModalVisible(true)}
               style={styles.controlButton}>
               <Download size={30} color="black" />
             </TouchableOpacity>
@@ -145,7 +209,14 @@ const GIFDetails = () => {
             </TouchableOpacity>
           </View>
         </View>
+        <DownloadModal
+          isVisible={isDownloadModalVisible}
+          onClose={() => setIsDownloadModalVisible(false)}
+          downloadGifOptions={downloadGifOptions}
+          handleDownload={handleDownload}
+        />
       </View>
+      <Toast />
     </View>
   );
 };

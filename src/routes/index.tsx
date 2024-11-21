@@ -1,5 +1,4 @@
 import React from 'react';
-import {StyleSheet} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import TrendingScreen from '../screens/TrendingScreen';
@@ -10,7 +9,7 @@ import GIFDetails from '../screens/GIFDetails';
 const Stack = createStackNavigator();
 
 const Router = () => {
-  const {theme} = useTheme(); 
+  const {theme} = useTheme();
 
   return (
     <NavigationContainer>
@@ -18,7 +17,7 @@ const Router = () => {
         initialRouteName="Trending"
         screenOptions={{
           headerStyle: {
-            backgroundColor: theme.headerColor, 
+            backgroundColor: theme.headerColor,
           },
           headerTintColor: theme.textColor,
           headerTitleStyle: {
@@ -26,13 +25,12 @@ const Router = () => {
           },
         }}>
         <Stack.Screen
-        
           name="Trending"
           component={TrendingScreen}
           options={{
             title: 'Trending GIFs',
             headerBackTitle: '',
-            headerRight: () => <ThemeToggleSwitch />, 
+            headerRight: () => <ThemeToggleSwitch />,
           }}
         />
         <Stack.Screen
@@ -41,7 +39,7 @@ const Router = () => {
           options={{
             title: 'GIF Details',
             headerBackTitle: '',
-            headerRight: () => <ThemeToggleSwitch />, 
+            headerRight: () => <ThemeToggleSwitch />,
           }}
         />
       </Stack.Navigator>
@@ -50,9 +48,3 @@ const Router = () => {
 };
 
 export default Router;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

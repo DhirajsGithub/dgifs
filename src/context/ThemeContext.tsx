@@ -5,6 +5,7 @@ type Theme = typeof lightTheme;
 
 interface ThemeContextProps {
   theme: Theme;
+  isDark : boolean;
   toggleTheme: () => void;
 }
 
@@ -12,15 +13,17 @@ const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 export const ThemeProvider = ({children}: {children: ReactNode}) => {
   const [isLightTheme, setIsLightTheme] = useState(true);
+  const [isDark, setIsDark] = useState(false);
 
   const toggleTheme = () => {
+    setIsDark(prev => !prev);
     setIsLightTheme(prev => !prev);
   };
 
   const theme = isLightTheme ? lightTheme : darkTheme; 
 
   return (
-    <ThemeContext.Provider value={{theme, toggleTheme}}>
+    <ThemeContext.Provider value={{theme, toggleTheme, isDark}}>
       {children}
     </ThemeContext.Provider>
   );

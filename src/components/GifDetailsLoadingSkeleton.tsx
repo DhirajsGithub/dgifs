@@ -1,15 +1,15 @@
 import React from 'react';
-import ContentLoader, { Circle, Rect } from 'react-content-loader/native';
-import { useTheme } from '../context/ThemeContext';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import ContentLoader, {Circle, Rect} from 'react-content-loader/native';
+import {useTheme} from '../context/ThemeContext';
+import {Dimensions, StyleSheet, View} from 'react-native';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 const GifDetailsLoadingSkeleton = () => {
-  const { theme } = useTheme();
+  const {isDark} = useTheme();
   const circleRadius = 30;
   const circleSpacing = 20;
-  const rectWidth = width-100;
+  const rectWidth = width - 100;
   const rectHeight = 10;
 
   return (
@@ -19,24 +19,12 @@ const GifDetailsLoadingSkeleton = () => {
         width={width * 0.9}
         height={width * 0.9 + 150}
         viewBox={`0 0 ${width * 0.9} ${width * 0.9 + 150}`}
-        backgroundColor={
-          theme.backgroundColor === '#ffffff' ? '#e0e0e0' : '#333333'
-        }
-        foregroundColor={
-          theme.backgroundColor === '#ffffff' ? '#f4f4f4' : '#555555'
-        }
-      >
-        <Rect
-          x="0"
-          y="0"
-          rx="20" 
-          ry="20"
-          width="100%"
-          height={width * 0.9}
-        />
+        backgroundColor={!isDark ? '#e0e0e0' : '#333333'}
+        foregroundColor={!isDark ? '#f4f4f4' : '#555555'}>
+        <Rect x="0" y="0" rx="20" ry="20" width="100%" height={width * 0.9} />
 
         <Rect
-          x={(width * 0.9 - rectWidth) / 2}  
+          x={(width * 0.9 - rectWidth) / 2}
           y={width * 0.9 + 20}
           rx="4"
           ry="4"
@@ -49,7 +37,11 @@ const GifDetailsLoadingSkeleton = () => {
           cy={width * 0.9 + 100}
           r={circleRadius}
         />
-        <Circle cx={(width * 0.9) / 2} cy={width * 0.9 + 100} r={circleRadius} />
+        <Circle
+          cx={(width * 0.9) / 2}
+          cy={width * 0.9 + 100}
+          r={circleRadius}
+        />
         <Circle
           cx={(width * 0.9) / 2 + circleRadius * 2 + circleSpacing}
           cy={width * 0.9 + 100}

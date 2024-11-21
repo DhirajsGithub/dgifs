@@ -1,23 +1,24 @@
 import {useNavigation} from '@react-navigation/native';
 import React from 'react';
-import {TouchableOpacity, Image, StyleSheet} from 'react-native';
+import {TouchableOpacity, StyleSheet} from 'react-native';
+import FastImage from 'react-native-fast-image';
 
 const GifItem = ({item, ITEM_SIZE}: {item: any; ITEM_SIZE: number}) => {
   const navigation = useNavigation();
-  const handleGigPress = id => {
-    navigation.navigate('GIFDetails', {id: item.id, item});
+  const handleGigPress = () => {
+    navigation.navigate('GIFDetails', {id: item.id});
   };
   return (
     <TouchableOpacity onPress={handleGigPress} style={styles.gifItem}>
-      <Image
-        source={{uri: item.images.fixed_width.url}}
+      <FastImage
+        source={{uri: item.images.preview_gif.url}}
         style={{
           width: ITEM_SIZE,
           height:
             parseInt(item.images.fixed_width.height) *
             (ITEM_SIZE / parseInt(item.images.fixed_width.width)),
         }}
-        resizeMode="cover"
+        resizeMode={FastImage.resizeMode.contain}
       />
     </TouchableOpacity>
   );
